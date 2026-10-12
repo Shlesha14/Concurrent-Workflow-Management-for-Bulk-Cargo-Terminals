@@ -1,0 +1,5 @@
+package edu.portflow.model;
+
+public enum TaskStatus {
+    CREATED, VALIDATED, READY, WAITING_FOR_RESOURCE, RUNNING, COMPLETED, FAILED, BLOCKED, CANCELLED, EXPIRED
+}

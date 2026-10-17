@@ -1,0 +1,16 @@
+digraph ARCH {
+  rankdir=TB; node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11, fillcolor="#F4F8FA"]; edge [fontname="Helvetica", fontsize=9];
+  subgraph cluster_ui { label="ui (Java Swing, EDT only)"; style=dashed; UI [label="MainFrame + 9 panels\nSwingWorker for all DB work"]; }
+  subgraph cluster_svc { label="service"; style=dashed; CS [label="CargoService\nCargoValidator"]; WS [label="WorkflowService\n(DAG build/validate)"]; RS [label="ResourceService\n(failure -> revision)"]; TA [label="TaskAdminService\nretry / cancel"]; RP [label="ReportService\nSettings"]; }
+  subgraph cluster_core { label="OS core"; style=dashed;
+    EN [label="engine.ExecutionEngine\n1 dispatcher thread + fixed worker pool\nstate machine, retry/backoff, timeouts", fillcolor="#E8F3EC"];
+    SC [label="scheduler\nFCFS | PRIORITY | EDF | PERISHABILITY\nSchedulePlanner (preview/revisions)", fillcolor="#E8F3EC"];
+    RM [label="resource.ResourceManager\nReentrantLock(tryLock timeout)\nall-or-nothing, ordered locking\nResourceSelector, DeadlockDetector", fillcolor="#E8F3EC"];
+    DG [label="workflow.DagValidator\n(Kahn, cycle detection)", fillcolor="#E8F3EC"]; }
+  subgraph cluster_sim { label="simulation / monitoring"; style=dashed; SIM [label="SimClock, ScenarioRunner A-H\nStressTest, PolicyComparator\nTemperatureSimulator (simulated)"]; MET [label="MetricsService"]; }
+  subgraph cluster_dao { label="dao + util (JDBC)"; style=dashed; DAO [label="Cargo/Task/Resource/Allocation/Profile/Report DAOs\nEventLog (audit in same tx)\nDatabase: bounded pool + inTransaction()"]; }
+  DB [label="MySQL (InnoDB)\nconstraints, triggers, views,\nrow locks FOR UPDATE", shape=cylinder, fillcolor="#FDF3E3"];
+  UI -> CS; UI -> WS; UI -> RS; UI -> TA; UI -> RP; UI -> SIM;
+  WS -> DG; WS -> RM [label="diagnose"]; RS -> SC [label="plan"]; EN -> SC [label="order"]; EN -> RM [label="allocate / release"]; EN -> DG [label="validate"]; SIM -> EN; MET -> RM;
+  CS -> DAO; WS -> DAO; RS -> DAO; TA -> DAO; RP -> DAO; EN -> DAO; RM -> DAO; DAO -> DB [label="JDBC, prepared statements"];
+}

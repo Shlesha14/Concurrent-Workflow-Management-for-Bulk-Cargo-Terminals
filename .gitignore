@@ -1,0 +1,10 @@
+target/
+*.class
+*.iml
+.idea/
+.vscode/
+out/
+portflow.properties
+reports/
+*.log
+.DS_Store

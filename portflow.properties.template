@@ -1,0 +1,8 @@
+# Copy to portflow.properties (git-ignored) and edit. Never commit real passwords.
+# MySQL 8.x:   jdbc:mysql://localhost:3306/portflow?useSSL=false&allowPublicKeyRetrieval=true
+# MariaDB 10.6+ (compatible, used for the verification run): jdbc:mariadb://localhost:3306/portflow
+db.url=jdbc:mysql://localhost:3306/portflow?useSSL=false&allowPublicKeyRetrieval=true
+db.user=portflow
+db.password=CHANGE_ME
+db.pool.size=12
+db.pool.wait.ms=5000

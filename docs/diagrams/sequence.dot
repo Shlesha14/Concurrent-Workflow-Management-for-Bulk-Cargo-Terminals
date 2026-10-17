@@ -1,0 +1,13 @@
+digraph SEQ {
+  rankdir=LR; node [shape=box, style="rounded,filled", fillcolor="#F4F8FA", fontname="Helvetica", fontsize=10]; edge [fontname="Helvetica", fontsize=9];
+  a [label="1 Dispatcher tick\nhousekeeping tx:\nvalidate DAG, expiry,\nfailed-prereq, READY promotion,\nwait timeout"];
+  b [label="2 Policy orders\nREADY / WAITING tasks"];
+  c [label="3 ResourceManager.allocateAndStart\nJava lock (tryLock, timeout)\n-> READ COMMITTED tx\nSELECT ... FOR UPDATE (type,id order)\nplan ALL requirements"];
+  d [label="4 all fit?\nINSERT allocations + audit\nREADY -> RUNNING  COMMIT", shape=diamond];
+  e [label="WAIT (contention)\nor BLOCKED (permanent)\nrecorded with reason"];
+  f [label="5 Worker thread (pool)\nmark started, simulated work\n(NO open DB tx)"];
+  g [label="6 NEW tx: RUNNING -> COMPLETED\nrelease equipment / HOLD storage\naudit rows  COMMIT"];
+  h [label="7 failure? release in tx,\nFAILED, retry with back-off\nor RETRIES_EXHAUSTED\nfinally: safetyRelease"];
+  i [label="8 wake dispatcher (Semaphore)\ndependants become READY"];
+  a -> b -> c -> d; d -> f [label="yes"]; d -> e [label="no"]; f -> g; f -> h [style=dashed]; g -> i; h -> i; i -> a;
+}

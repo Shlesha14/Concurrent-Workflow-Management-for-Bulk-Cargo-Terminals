@@ -1,0 +1,27 @@
+digraph ER {
+  rankdir=LR; node [shape=record, fontname="Helvetica", fontsize=10, style=filled, fillcolor="#F4F8FA"]; edge [fontname="Helvetica", fontsize=9];
+  handling_profile [label="{handling_profile|PK profile_code\l requires_expiry, temp_min_c/temp_max_c\l max_wait_min, expired_policy\l}"];
+  profile_step [label="{profile_step|PK (profile_code, step_code)\l task_type, base_min, per_unit_min\l}"];
+  profile_step_dep [label="{profile_step_dep|PK (profile, step, depends_on_step)\l}"];
+  profile_step_req [label="{profile_step_req|PK req_id\l resource_type FK, capability\l amount_mode, hold_until_step\l}"];
+  resource_type [label="{resource_type|PK type_code\l capacity_model SLOTS or QUANTITY\l}"];
+  cargo [label="{cargo|PK cargo_id\l FK profile_code\l quantity, unit, priority\l arrival, manufactured_at, expires_at, deadline_at\l status, status_reason\l}", fillcolor="#E8F3EC"];
+  workflow_instance [label="{workflow_instance|PK workflow_id\l FK cargo_id (UNIQUE)\l state\l}", fillcolor="#E8F3EC"];
+  task [label="{task|PK task_id\l FK workflow_id, FK cargo_id\l step_code, state, priority\l block_code, block_reason\l ready_at, started_at, completed_at\l deadline_at, retry_count, worker_thread\l}", fillcolor="#E8F3EC"];
+  task_dependency [label="{task_dependency|PK (task_id, depends_on_task_id)\l CHECK task_id != depends_on\l}", fillcolor="#E8F3EC"];
+  task_requirement [label="{task_requirement|PK requirement_id\l FK task_id, FK resource_type\l capability, amount, hold_until_step\l}", fillcolor="#E8F3EC"];
+  resource [label="{resource|PK resource_id\l name UNIQUE, FK type_code\l capacity, status\l location, temp_min_c/temp_max_c\l}", fillcolor="#FDF3E3"];
+  resource_capability [label="{resource_capability|PK (resource_id, capability)\l}", fillcolor="#FDF3E3"];
+  allocation [label="{allocation|PK allocation_id\l FK task_id, requirement_id, resource_id\l amount, status ACTIVE, HELD, RELEASED, REVOKED\l start_time, end_time, live_key UNIQUE\l}", fillcolor="#FDF3E3"];
+  schedule_revision [label="{schedule_revision|PK revision_id\l reason_code, policy_name\l FK resource_id\l}", fillcolor="#F3E8F7"];
+  plan_entry [label="{plan_entry|PK plan_entry_id\l FK revision_id, task_id, resource_id\l planned_start, planned_end\l}", fillcolor="#F3E8F7"];
+  storage_reading [label="{storage_reading|PK reading_id\l FK resource_id\l temp_c, excursion, is_simulated\l}", fillcolor="#F3E8F7"];
+  event_log [label="{event_log (append-only)|PK event_id\l event_type, ts, sim_ts\l task_id, cargo_id, resource_id, workflow_id\l thread_name, from_state, to_state, message\l}", fillcolor="#F3E8F7"];
+  handling_profile -> profile_step [label="1 : N"]; profile_step -> profile_step_dep [label="1 : N"]; profile_step -> profile_step_req [label="1 : N"];
+  resource_type -> profile_step_req [label="1 : N"]; resource_type -> resource [label="1 : N"]; resource_type -> task_requirement [label="1 : N"];
+  handling_profile -> cargo [label="1 : N"]; cargo -> workflow_instance [label="1 : 1"]; workflow_instance -> task [label="1 : N"]; cargo -> task [label="1 : N"];
+  task -> task_dependency [label="1 : N (task)"]; task -> task_dependency [label="1 : N (prerequisite)", style=dashed];
+  task -> task_requirement [label="1 : N"]; task_requirement -> allocation [label="1 : N over time\n(1 live)"]; task -> allocation [label="1 : N"]; resource -> allocation [label="1 : N"];
+  resource -> resource_capability [label="1 : N"]; resource -> storage_reading [label="1 : N"];
+  schedule_revision -> plan_entry [label="1 : N"]; task -> plan_entry [label="1 : N"]; resource -> plan_entry [label="1 : N"]; resource -> schedule_revision [label="0..1 : N"];
+}

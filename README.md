@@ -46,6 +46,20 @@ mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS portflow_test"
 mvn test -Dportflow.test.url="jdbc:mysql://localhost:3306/portflow_test?useSSL=false&allowPublicKeyRetrieval=true" \
          -Dportflow.test.user=portflow -Dportflow.test.password=choose-a-password
 ```
+**Important configuration note:**
+
+The password `choose-a-password` shown in the example
+is a placeholder. Replace it with the actual password
+configured for your MySQL `portflow` test user.
+
+Before running database tests, ensure that:
+- MySQL Server is running.
+- The `portflow_test` database exists.
+- The `portflow` user has appropriate database privileges.
+- The JDBC URL and credentials match your local configuration.
+
+Never commit actual database passwords or credentials
+to the GitHub repository.
 Without a reachable MySQL the DB tests are **skipped, not passed** (JUnit shows them as aborted). `UiSmokeTest` needs a display and is skipped on headless machines.
 
 ## 7. Run the demonstration scenarios (A–H)
